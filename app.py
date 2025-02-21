@@ -5,7 +5,7 @@ import json
 
 app = Flask(__name__)
 
-api_secret = '92JarEF30ULie9SYp0JggKwLk524vHIc'  # Reemplaza con tu secreto de API
+api_secret = '328TZQ5vwNWr2QF9JM01Ci7SnrviE7ZQ'  # Reemplaza con tu secreto de API
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
