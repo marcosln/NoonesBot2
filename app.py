@@ -7,7 +7,6 @@ app = Flask(__name__)
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'GET':
-        # Validar el desafío de Noones
         challenge = request.headers.get('X-Noones-Request-Challenge')
         if challenge:
             return Response(challenge, mimetype='text/plain')
@@ -15,7 +14,10 @@ def webhook():
             return Response("Webhook endpoint activo", status=200)
     
     if request.method == 'POST':
-        # Revisar los encabezados de la solicitud
+        # Imprimir los encabezados para depurar
+        print("Encabezados:", request.headers)
+        
+        # Revisar el tipo de contenido de la solicitud
         if request.headers.get('Content-Type') != 'text/plain':
             return Response(
                 json.dumps({
@@ -46,17 +48,15 @@ def webhook():
             )
         
         try:
-            # Procesar el cuerpo de la solicitud (esperamos que sea texto plano)
             data = request.get_data(as_text=True)
             print("Notificación recibida:", data)
-            # Aquí puedes agregar lógica adicional para procesar la notificación
             return Response(
                 json.dumps({
                     "status": "success",
                     "timestamp": int(time.time()),
                     "data": {
                         "success": True,
-                        "offer_hash": data  # Puedes incluir el "offer_hash" aquí si es relevante
+                        "offer_hash": data  # Cambiar según lo que necesites
                     }
                 }),
                 status=200,
