@@ -1,8 +1,11 @@
+import hashlib
+import hmac
 from flask import Flask, request, Response
 import json
-import time
 
 app = Flask(__name__)
+
+api_secret = '92JarEF30ULie9SYp0JggKwLk524vHIc'  # Reemplaza con tu secreto de API
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
@@ -10,74 +13,20 @@ def webhook():
         challenge = request.headers.get('X-Noones-Request-Challenge')
         if challenge:
             return Response(challenge, mimetype='text/plain')
-        else:
-            return Response("Webhook endpoint activo", status=200)
-    
-    if request.method == 'POST':
-        # Imprimir los encabezados para depurar
-        print("Encabezados:", request.headers)
-        
-        # Revisar el tipo de contenido de la solicitud
-        if request.headers.get('Content-Type') != 'text/plain':
-            return Response(
-                json.dumps({
-                    "status": "error",
-                    "timestamp": int(time.time()),
-                    "error": {
-                        "code": 415,
-                        "message": "Unsupported Media Type"
-                    }
-                }),
-                status=415,
-                mimetype='application/json'
-            )
+        return "Webhook activo", 200
 
-        # Revisar los encabezados Accept
-        if request.headers.get('Accept') != 'application/json; version=1':
-            return Response(
-                json.dumps({
-                    "status": "error",
-                    "timestamp": int(time.time()),
-                    "error": {
-                        "code": 406,
-                        "message": "Not Acceptable"
-                    }
-                }),
-                status=406,
-                mimetype='application/json'
-            )
+    if request.method == 'POST':
+        # Verificar la firma
+        provided_signature = request.headers.get('X-Noones-Signature')
+        calculated_signature = hmac.new(api_secret.encode(), request.data, hashlib.sha256).hexdigest()
         
-        try:
-            data = request.get_data(as_text=True)
-            print("Notificación recibida:", data)
-            return Response(
-                json.dumps({
-                    "status": "success",
-                    "timestamp": int(time.time()),
-                    "data": {
-                        "success": True,
-                        "offer_hash": data  # Cambiar según lo que necesites
-                    }
-                }),
-                status=200,
-                mimetype='application/json'
-            )
-        except Exception as e:
-            print("Error al procesar la solicitud:", e)
-            return Response(
-                json.dumps({
-                    "status": "error",
-                    "timestamp": int(time.time()),
-                    "error": {
-                        "code": 400,
-                        "message": "Bad Request"
-                    }
-                }),
-                status=400,
-                mimetype='application/json'
-            )
-    
-    return Response("Método no permitido", status=405)
+        if provided_signature != calculated_signature:
+            return Response("Firma inválida", status=403)
+        
+        # Procesar el evento
+        data = json.loads(request.data)
+        print("Evento recibido:", data)
+        return Response("Evento procesado", status=200)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
