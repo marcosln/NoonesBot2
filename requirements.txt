@@ -1,5 +1,7 @@
 flask
-
+python
+requests
+flask
 /NoonesBot2/
 │
 ├── app.py
